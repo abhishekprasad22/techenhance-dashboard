@@ -36,14 +36,15 @@ export const dataService = {
   async uploadCSV(file: File): Promise<Dataset> {
     const formData = new FormData();
     formData.append('file', file);
-    const response = await api.post('/upload/csv', formData, {
+    const response = await api.post('/datasets/upload/csv', formData, {
       headers: { 'Content-Type': 'multipart/form-data' },
     });
     return response.data;
   },
 
   async generateData(type: string, options: { count?: number; name?: string } = {}): Promise<Dataset> {
-    const response = await api.post(`/generate/${type}`, options);
+    console.log(`Generating data of type: ${type} with options:`, options);
+    const response = await api.post(`/datasets/generate/${type}`, options);
     return response.data;
   },
 

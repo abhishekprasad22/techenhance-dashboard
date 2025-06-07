@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Upload, Plus, Trash2, Download, FileText, Zap } from "lucide-react";
+import { Upload, Plus, Trash2, FileText, Zap } from "lucide-react";
 import toast from "react-hot-toast";
 import { Dataset } from "../types";
 import { dataService } from "../services/dataService";

@@ -13,9 +13,9 @@ import {
 } from "chart.js";
 import { Line, Bar, Pie, Doughnut, Scatter } from "react-chartjs-2";
 import {
-  Settings,
-  Download,
-  Maximize2,
+  // Settings,
+  // Download,
+  // Maximize2,
   BarChart3,
   LineChart,
   PieChart as PieChartIcon,

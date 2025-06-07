@@ -1,13 +1,20 @@
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const multer = require('multer');
-const fs = require('fs');
-const csv = require('csv-parser');
-const { getDataSet,getDataSetById,createDataSet,generateDataSet,deleteDataSet } = require('../controllers/datasetcontroller');
+const multer = require("multer");
+const fs = require("fs");
+const csv = require("csv-parser");
+const {
+  getDataSet,
+  getDataSetById,
+  createDataSet,
+  generateDataSet,
+  deleteDataSet,
+} = require("../controllers/datasetcontroller");
+
 // File upload configuration
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    const uploadDir = 'uploads/';
+    const uploadDir = "uploads/";
     if (!fs.existsSync(uploadDir)) {
       fs.mkdirSync(uploadDir, { recursive: true });
     }
@@ -15,37 +22,37 @@ const storage = multer.diskStorage({
   },
   filename: (req, file, cb) => {
     cb(null, `${Date.now()}-${file.originalname}`);
-  }
+  },
 });
 
-const upload = multer({ 
+const upload = multer({
   storage,
   limits: { fileSize: 5 * 1024 * 1024 }, // 5MB limit
   fileFilter: (req, file, cb) => {
-    if (file.mimetype === 'text/csv' || file.mimetype === 'application/json') {
+    if (file.mimetype === "text/csv" || file.mimetype === "application/json") {
       cb(null, true);
     } else {
-      cb(new Error('Only CSV and JSON files are allowed'));
+      cb(new Error("Only CSV and JSON files are allowed"));
     }
-  }
+  },
 });
+
 // In-memory data store (in production, use a proper database)
 
-
 // Get all datasets
-router.get('', getDataSet);
+router.get("", getDataSet);
 
 // Get specific dataset
-router.get('/:id', getDataSetById);
+router.get("/:id", getDataSetById);
 
 // Create new dataset
-router.post('', createDataSet);
+router.post("", createDataSet);
 
 // Update dataset
-router.put('/:id', (req, res) => {
-  const datasetIndex = datasets.findIndex(d => d.id === req.params.id);
+router.put("/:id", (req, res) => {
+  const datasetIndex = datasets.findIndex((d) => d.id === req.params.id);
   if (datasetIndex === -1) {
-    return res.status(404).json({ error: 'Dataset not found' });
+    return res.status(404).json({ error: "Dataset not found" });
   }
 
   const { name, data, type } = req.body;
@@ -54,22 +61,22 @@ router.put('/:id', (req, res) => {
     name: name || datasets[datasetIndex].name,
     data: data || datasets[datasetIndex].data,
     type: type || datasets[datasetIndex].type,
-    updatedAt: new Date().toISOString()
+    updatedAt: new Date().toISOString(),
   };
 
   res.json(datasets[datasetIndex]);
 });
 
 // Delete dataset
-router.delete('/:id', deleteDataSet);
+router.delete("/:id", deleteDataSet);
 
 // Generate sample data
-router.post('/generate/:type', generateDataSet);
+router.post("/generate/:type", generateDataSet);
 
 // Upload CSV file
-router.post('/upload/csv', upload.single('file'), (req, res) => {
+router.post("/upload/csv", upload.single("file"), (req, res) => {
   if (!req.file) {
-    return res.status(400).json({ error: 'No file uploaded' });
+    return res.status(400).json({ error: "No file uploaded" });
   }
 
   const results = [];
@@ -77,25 +84,25 @@ router.post('/upload/csv', upload.single('file'), (req, res) => {
 
   fs.createReadStream(filePath)
     .pipe(csv())
-    .on('data', (data) => results.push(data))
-    .on('end', () => {
+    .on("data", (data) => results.push(data))
+    .on("end", () => {
       // Clean up uploaded file
       fs.unlinkSync(filePath);
 
       const newDataset = {
         id: Date.now().toString(),
-        name: req.file.originalname.replace('.csv', ''),
+        name: req.file.originalname.replace(".csv", ""),
         data: results,
-        type: 'uploaded',
-        createdAt: new Date().toISOString()
+        type: "uploaded",
+        createdAt: new Date().toISOString(),
       };
 
       datasets.push(newDataset);
       res.json(newDataset);
     })
-    .on('error', (error) => {
+    .on("error", (error) => {
       fs.unlinkSync(filePath);
-      res.status(500).json({ error: 'Error processing CSV file' });
+      res.status(500).json({ error: "Error processing CSV file" });
     });
 });
 

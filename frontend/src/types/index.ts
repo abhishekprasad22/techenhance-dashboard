@@ -1,3 +1,4 @@
+// Represents a dataset object with metadata and data array
 export interface Dataset {
   id: string;
   name: string;
@@ -8,6 +9,7 @@ export interface Dataset {
   dataPoints?: number;
 }
 
+// Configuration for a chart visualization
 export interface ChartConfig {
   type: 'line' | 'bar' | 'pie' | 'doughnut' | 'scatter' | 'histogram';
   title: string;
@@ -16,4 +18,5 @@ export interface ChartConfig {
   colors?: string[];
 }
 
+// Supported view types in the app
 export type ViewType = 'dashboard' | 'charts' | 'data';

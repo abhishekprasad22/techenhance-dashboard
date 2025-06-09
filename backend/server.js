@@ -27,6 +27,7 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
 
 app.use("/api/datasets", datasetroute);
+app.use("/api/recommendations", require("./routes/recommendationroute"));
 
 // Test the connection
 pool.query("SELECT NOW()", (err, res) => {

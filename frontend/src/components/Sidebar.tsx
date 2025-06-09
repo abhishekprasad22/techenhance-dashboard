@@ -12,6 +12,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) => {
     { id: 'dashboard' as ViewType, label: 'Dashboard', icon: LayoutDashboard },
     { id: 'charts' as ViewType, label: 'Charts', icon: BarChart3 },
     { id: 'data' as ViewType, label: 'Data Manager', icon: Database },
+    { id: 'recommendations' as ViewType, label: 'Recommendations', icon: TrendingUp },
   ];
 
   return (

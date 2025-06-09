@@ -1,5 +1,6 @@
 import axios from 'axios';
 import { Dataset } from '../types';
+import { LoanApplicant } from '../types/loan';
 
 // Base URL for API endpoints
 const API_BASE_URL = '/api';
@@ -63,4 +64,16 @@ export const dataService = {
     const response = await api.get('/health');
     return response.data;
   },
+
+  async getRecommendations(): Promise<LoanApplicant[]> {
+    // axios.get('http://localhost:5000/api/some-data') // change to your backend route
+      //   .then(response => {
+      //     console.log("Fetched data:", response.data);
+      //   })
+      //   .catch(error => {
+      //     console.error("Error fetching data:", error);
+      //   });
+      const response = await api.get('/recommendations');
+      return response.data;
+  }
 };

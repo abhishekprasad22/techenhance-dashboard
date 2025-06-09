@@ -5,13 +5,14 @@ import Sidebar from "./components/Sidebar";
 import Dashboard from "./components/Dashboard";
 import ChartView from "./components/ChartView";
 import DataManager from "./components/DataManager";
+import Recommendations from "./components/Recommendations.tsx";
 import { Dataset } from "./types";
 import { dataService } from "./services/dataService";
 
 function App() {
   // State for current view: dashboard, charts, or data manager
   const [currentView, setCurrentView] = useState<
-    "dashboard" | "charts" | "data"
+    "dashboard" | "charts" | "data" | "recommendations"
   >("dashboard");
   // State for all datasets
   const [datasets, setDatasets] = useState<Dataset[]>([]);
@@ -75,6 +76,11 @@ function App() {
         // Show data manager for managing datasets
         return (
           <DataManager datasets={datasets} onDatasetChange={loadDatasets} />
+        );
+      case "recommendations":
+        // Placeholder for recommendations view
+        return (
+          <Recommendations />
         );
       default:
         // Fallback to dashboard

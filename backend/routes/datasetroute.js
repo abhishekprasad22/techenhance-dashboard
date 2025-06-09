@@ -74,7 +74,40 @@ router.delete("/:id", deleteDataSet);
 router.post("/generate/:type", generateDataSet);
 
 // Upload CSV file
-router.post("/upload/csv", upload.single("file"), (req, res) => {
+// router.post("/upload/csv", upload.single("file"), (req, res) => {
+//   if (!req.file) {
+//     return res.status(400).json({ error: "No file uploaded" });
+//   }
+
+//   const results = [];
+//   const filePath = req.file.path;
+
+//   fs.createReadStream(filePath)
+//     .pipe(csv())
+//     .on("data", (data) => results.push(data))
+//     .on("end", () => {
+//       // Clean up uploaded file
+//       fs.unlinkSync(filePath);
+
+//       const newDataset = {
+//         id: Date.now().toString(),
+//         name: req.file.originalname.replace(".csv", ""),
+//         data: results,
+//         type: "uploaded",
+//         createdAt: new Date().toISOString(),
+//       };
+
+//       datasets.push(newDataset);
+//       res.json(newDataset);
+//     })
+//     .on("error", (error) => {
+//       fs.unlinkSync(filePath);
+//       res.status(500).json({ error: "Error processing CSV file" });
+//     });
+// });
+
+// Upload CSV file with pg
+router.post("/upload/csv", upload.single("file"), async (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: "No file uploaded" });
   }
@@ -82,28 +115,40 @@ router.post("/upload/csv", upload.single("file"), (req, res) => {
   const results = [];
   const filePath = req.file.path;
 
-  fs.createReadStream(filePath)
-    .pipe(csv())
-    .on("data", (data) => results.push(data))
-    .on("end", () => {
-      // Clean up uploaded file
-      fs.unlinkSync(filePath);
-
-      const newDataset = {
-        id: Date.now().toString(),
-        name: req.file.originalname.replace(".csv", ""),
-        data: results,
-        type: "uploaded",
-        createdAt: new Date().toISOString(),
-      };
-
-      datasets.push(newDataset);
-      res.json(newDataset);
-    })
-    .on("error", (error) => {
-      fs.unlinkSync(filePath);
-      res.status(500).json({ error: "Error processing CSV file" });
+  try {
+    // Read CSV file
+    await new Promise((resolve, reject) => {
+      fs.createReadStream(filePath)
+        .pipe(csv())
+        .on("data", (data) => results.push(data))
+        .on("end", resolve)
+        .on("error", reject);
     });
+
+    // Insert into PostgreSQL
+    const result = await pool.query(
+      `INSERT INTO datasets (name, data, type, created_at)
+       VALUES ($1, $2, $3, NOW())
+       RETURNING *`,
+      [
+        req.file.originalname.replace(".csv", ""),
+        JSON.stringify(results),
+        "uploaded",
+      ]
+    );
+
+    // Clean up uploaded file
+    fs.unlinkSync(filePath);
+
+    res.json(result.rows[0]);
+  } catch (error) {
+    // Clean up file on error
+    if (fs.existsSync(filePath)) {
+      fs.unlinkSync(filePath);
+    }
+    console.error("Upload error:", error);
+    res.status(500).json({ error: "Error processing CSV file" });
+  }
 });
 
 module.exports = router;

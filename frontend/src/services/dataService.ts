@@ -19,7 +19,7 @@ export const dataService = {
   },
 
   // Fetch a single dataset by ID
-  async getDataset(id: string): Promise<Dataset> {
+  async getDataset(id: number): Promise<Dataset> {
     const response = await api.get(`/datasets/${id}`);
     return response.data;
   },
@@ -31,13 +31,13 @@ export const dataService = {
   },
 
   // Update an existing dataset by ID
-  async updateDataset(id: string, dataset: Partial<Dataset>): Promise<Dataset> {
+  async updateDataset(id: number, dataset: Partial<Dataset>): Promise<Dataset> {
     const response = await api.put(`/datasets/${id}`, dataset);
     return response.data;
   },
 
   // Delete a dataset by ID
-  async deleteDataset(id: string): Promise<void> {
+  async deleteDataset(id: number): Promise<void> {
     await api.delete(`/datasets/${id}`);
   },
 

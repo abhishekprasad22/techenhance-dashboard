@@ -1,6 +1,6 @@
-import React from 'react';
-import { LayoutDashboard, BarChart3, Database, TrendingUp } from 'lucide-react';
-import { ViewType } from '../types';
+import React from "react";
+import { LayoutDashboard, BarChart3, Database, TrendingUp } from "lucide-react";
+import { ViewType } from "../types";
 
 interface SidebarProps {
   currentView: ViewType;
@@ -9,10 +9,14 @@ interface SidebarProps {
 
 const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) => {
   const menuItems = [
-    { id: 'dashboard' as ViewType, label: 'Dashboard', icon: LayoutDashboard },
-    { id: 'charts' as ViewType, label: 'Charts', icon: BarChart3 },
-    { id: 'data' as ViewType, label: 'Data Manager', icon: Database },
-    { id: 'recommendations' as ViewType, label: 'Recommendations', icon: TrendingUp },
+    { id: "dashboard" as ViewType, label: "Dashboard", icon: LayoutDashboard },
+    { id: "charts" as ViewType, label: "Charts", icon: BarChart3 },
+    { id: "data" as ViewType, label: "Data Manager", icon: Database },
+    {
+      id: "recommendations" as ViewType,
+      label: "Recommendations",
+      icon: TrendingUp,
+    },
   ];
 
   return (
@@ -21,15 +25,15 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) => {
         {menuItems.map((item) => {
           const Icon = item.icon;
           const isActive = currentView === item.id;
-          
+
           return (
             <button
               key={item.id}
               onClick={() => onViewChange(item.id)}
               className={`w-full flex items-center space-x-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                 isActive
-                  ? 'bg-primary-500/20 text-primary-300 border border-primary-500/30'
-                  : 'hover:bg-white/10 text-gray-300 hover:text-white'
+                  ? "bg-primary-500/20 text-primary-300 border border-primary-500/30"
+                  : "hover:bg-white/10 text-gray-300 hover:text-white"
               }`}
             >
               <Icon size={20} />
@@ -41,8 +45,8 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) => {
           );
         })}
       </nav>
-      
-      <div className="mt-8 p-4 glass-card rounded-lg">
+
+      {/* <div className="mt-8 p-4 glass-card rounded-lg">
         <h3 className="text-sm font-semibold text-gray-300 mb-2">Quick Stats</h3>
         <div className="space-y-2 text-sm">
           <div className="flex justify-between">
@@ -58,7 +62,7 @@ const Sidebar: React.FC<SidebarProps> = ({ currentView, onViewChange }) => {
             <span className="text-green-400 font-medium">Live</span>
           </div>
         </div>
-      </div>
+      </div> */}
     </aside>
   );
 };

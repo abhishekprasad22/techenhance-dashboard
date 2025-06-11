@@ -1,9 +1,9 @@
-import React, { useEffect } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
-import { useAuth } from "../contexts/AuthContext";
-import { authService } from "../services/authService";
-import LoadingSpinner from "../components/LoadingSpinner";
-import toast from "react-hot-toast";
+import React, { useEffect } from 'react';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useAuth } from '../contexts/AuthContext';
+import { authService } from '../services/authService';
+import LoadingSpinner from '../components/LoadingSpinner';
+import toast from 'react-hot-toast';
 
 const AuthCallback: React.FC = () => {
   const navigate = useNavigate();
@@ -16,24 +16,24 @@ const AuthCallback: React.FC = () => {
 
   const handleCallback = async () => {
     try {
-      const token = searchParams.get("token");
-
+      const token = searchParams.get('token');
+      
       if (token) {
-        localStorage.setItem("token", token);
-
+        localStorage.setItem('token', token);
+        
         // Get user data
         const userData = await authService.getCurrentUser();
         setUser(userData.user);
-
-        toast.success("Successfully signed in with Google!");
-        navigate("/dashboard");
+        
+        toast.success('Successfully signed in with Google!');
+        navigate('/dashboard');
       } else {
-        throw new Error("No token received");
+        throw new Error('No token received');
       }
     } catch (error) {
-      console.error("Auth callback error:", error);
-      toast.error("Authentication failed. Please try again.");
-      navigate("/auth");
+      console.error('Auth callback error:', error);
+      toast.error('Authentication failed. Please try again.');
+      navigate('/auth');
     }
   };
 

@@ -1,7 +1,8 @@
-const express = require("express");
+import express from 'express';
+import { getRecommendations } from '../controllers/recommendationcontroller.js';
+
 const router = express.Router();
-const { getRecommendations } = require("../controllers/recommendationcontroller");
 
-router.get("/", getRecommendations);
+router.get('/', getRecommendations);
 
-module.exports = router;
+export default router;

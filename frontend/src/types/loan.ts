@@ -7,9 +7,9 @@ export interface LoanApplicant {
   salary: number;
   creditScore: number;
   employmentYears: number;
-  loantype: LoanType;
-  requestedamount: number;
-  risklevel: RiskLevel;
+  loanType: LoanType;  // Updated from loantype
+  requestedAmount: number;  // Updated from requestedamount
+  riskLevel: RiskLevel;  // Updated from risklevel
   employmentType: string;
   monthlyExpenses: number;
   assets: number;

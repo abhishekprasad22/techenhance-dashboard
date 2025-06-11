@@ -16,31 +16,10 @@ api.interceptors.request.use((config) => {
   return config;
 });
 
-// Add response interceptor
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token');
-    }
-    return Promise.reject(error);
-  }
-);
-
 export const authService = {
   async login(email: string, password: string) {
-    try {
-      const response = await api.post('/login', { email, password });
-      // Ensure response.data contains token and user
-      if (response.data.token && response.data.user) {
-        return response.data;
-      } else {
-        throw new Error('Invalid response format');
-      }
-    } catch (error) {
-      console.error('Login error:', error);
-      throw error;
-    }
+    const response = await api.post('/login', { email, password });
+    return response.data;
   },
 
   async register(username: string, email: string, password: string) {
@@ -54,15 +33,8 @@ export const authService = {
   },
 
   async getCurrentUser() {
-    try {
-      const response = await api.get('/me');
-      return response.data;
-    } catch (error) {
-      if (axios.isAxiosError(error) && error.response?.status === 401) {
-        return null;
-      }
-      throw error;
-    }
+    const response = await api.get('/me');
+    return response.data;
   },
 
   getGoogleAuthUrl() {

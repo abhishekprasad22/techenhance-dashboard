@@ -1,7 +1,7 @@
 import axios from 'axios';
 import { Dataset } from '../types';
 
-const API_BASE_URL = '/api';
+const API_BASE_URL = '/api';  
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -16,6 +16,15 @@ api.interceptors.request.use((config) => {
   }
   return config;
 });
+
+// Add error interceptor
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    console.error('API Error:', error.response?.data || error.message);
+    throw error;
+  }
+);
 
 export const dataService = {
   async getDatasets(): Promise<Dataset[]> {
@@ -61,3 +70,15 @@ export const dataService = {
     return response.data;
   },
 };
+
+// Test the connection
+async function checkBackendConnection() {
+  try {
+    const health = await dataService.healthCheck();
+    console.log('Backend connection successful:', health);
+  } catch (error) {
+    console.error('Backend connection failed:', error);
+  }
+}
+
+checkBackendConnection();

@@ -85,7 +85,7 @@ app.get("/api/datasets", optionalAuth, async (req, res) => {
   try {
     let query = `
       SELECT id, name, type, is_public, created_at, updated_at,
-             json_array_length(data) as data_points
+             jsonb_array_length(data) as data_points
       FROM datasets 
       WHERE is_public = true
     `;

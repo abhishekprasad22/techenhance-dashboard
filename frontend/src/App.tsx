@@ -1,129 +1,94 @@
-import React, { useState, useEffect } from "react";
-import { Toaster } from "react-hot-toast";
-import Header from "./components/Header";
-import Sidebar from "./components/Sidebar";
-import Dashboard from "./components/Dashboard";
-import ChartView from "./components/ChartView";
-import DataManager from "./components/DataManager";
-import Recommendations from "./components/Recommendations.tsx";
-import { Dataset } from "./types";
-import { dataService } from "./services/dataService";
+import React from "react";
+import {
+  createBrowserRouter,
+  RouterProvider,
+  // createRoutesFromElements,
+  Route,
+} from "react-router-dom";
+import { AuthProvider } from "./contexts/AuthContext";
+import { useAuth } from "./contexts/AuthContext";
+import LandingPage from "./pages/LandingPage";
+import AuthPage from "./pages/AuthPage";
+import Dashboard from "./pages/Dashboard";
+import AuthCallback from "./pages/AuthCallback";
+import LoadingSpinner from "./components/LoadingSpinner";
 
-function App() {
-  // State for current view: dashboard, charts, or data manager
-  const [currentView, setCurrentView] = useState<
-    "dashboard" | "charts" | "data" | "recommendations"
-  >("dashboard");
-  // State for all datasets
-  const [datasets, setDatasets] = useState<Dataset[]>([]);
-  // State for the currently selected dataset
-  const [selectedDataset, setSelectedDataset] = useState<Dataset | null>(null);
-  // State for loading indicator
-  const [loading, setLoading] = useState(true);
-
-  // Load datasets on initial mount
-  useEffect(() => {
-    loadDatasets();
-  }, []);
-
-  // Fetch all datasets from the data service
-  const loadDatasets = async () => {
-    try {
-      setLoading(true);
-      const data = await dataService.getDatasets();
-      setDatasets(data);
-    } catch (error) {
-      console.error("Failed to load datasets:", error);
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  // Handle selection of a dataset and switch to chart view
-  const handleDatasetSelect = async (datasetId: string) => {
-    try {
-      const dataset = await dataService.getDataset(datasetId);
-      setSelectedDataset(dataset);
-      setCurrentView("charts");
-    } catch (error) {
-      console.error("Failed to load dataset:", error);
-    }
-  };
-
-  // Render content based on the current view
-  const renderContent = () => {
-    switch (currentView) {
-      case "dashboard":
-        // Show dashboard with list of datasets
-        return (
-          <Dashboard
-            datasets={datasets}
-            onDatasetSelect={handleDatasetSelect}
-          />
-        );
-      case "charts":
-        // Show chart view if a dataset is selected, otherwise prompt user
-        return selectedDataset ? (
-          <ChartView dataset={selectedDataset} />
-        ) : (
-          <div className="flex items-center justify-center h-64">
-            <p className="text-gray-400">
-              Please select a dataset to visualize
-            </p>
-          </div>
-        );
-      case "data":
-        // Show data manager for managing datasets
-        return (
-          <DataManager datasets={datasets} onDatasetChange={loadDatasets} />
-        );
-      case "recommendations":
-        // Placeholder for recommendations view
-        return (
-          <Recommendations />
-        );
-      default:
-        // Fallback to dashboard
-        return (
-          <Dashboard
-            datasets={datasets}
-            onDatasetSelect={handleDatasetSelect}
-          />
-        );
-    }
-  };
-
-  // Show loading spinner while fetching data
-  if (loading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-400"></div>
-      </div>
-    );
+// Add error boundary
+class ErrorBoundary extends React.Component<
+  { children: React.ReactNode },
+  { hasError: boolean }
+> {
+  constructor(props: { children: React.ReactNode }) {
+    super(props);
+    this.state = { hasError: false };
   }
 
-  // Main app layout with header, sidebar, main content, and toaster notifications
+  static getDerivedStateFromError() {
+    return { hasError: true };
+  }
+
+  render() {
+    if (this.state.hasError) {
+      return <div>Something went wrong. Please refresh the page.</div>;
+    }
+    return this.props.children;
+  }
+}
+
+const ProtectedRoute: React.FC<{ children: React.ReactNode }> = ({
+  children,
+}) => {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return <LoadingSpinner />;
+  }
+
+  if (!user) {
+    return <Navigate to="/auth" replace />;
+  }
+
+  return <>{children}</>;
+};
+
+const router = createBrowserRouter(
+  [
+    {
+      path: "/",
+      element: <LandingPage />,
+    },
+    {
+      path: "/auth",
+      element: <AuthPage />,
+    },
+    {
+      path: "/auth/callback",
+      element: <AuthCallback />,
+    },
+    {
+      path: "/dashboard/*",
+      element: (
+        <ProtectedRoute>
+          <Dashboard />
+        </ProtectedRoute>
+      ),
+    },
+  ],
+  {
+    future: {
+      v7_startTransition: true,
+      v7_relativeSplatPath: true,
+    },
+  }
+);
+
+function App() {
   return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      <div className="flex flex-1">
-        <Sidebar currentView={currentView} onViewChange={setCurrentView} />
-        <main className="flex-1 p-6 overflow-auto">
-          <div className="max-w-7xl mx-auto">{renderContent()}</div>
-        </main>
-      </div>
-      <Toaster
-        position="top-right"
-        toastOptions={{
-          style: {
-            background: "rgba(255, 255, 255, 0.1)",
-            color: "#fff",
-            backdropFilter: "blur(10px)",
-            border: "1px solid rgba(255, 255, 255, 0.2)",
-          },
-        }}
-      />
-    </div>
+    <ErrorBoundary>
+      <AuthProvider>
+        <RouterProvider router={router} />
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }
 

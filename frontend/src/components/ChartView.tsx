@@ -55,8 +55,21 @@ const ChartView: React.FC<ChartViewProps> = ({ dataset }) => {
   ];
 
   const chartData = useMemo(() => {
-    const data = dataset.data;
-    if (!data || data.length === 0) return null;
+    const data = dataset?.data;
+    if (!data || !Array.isArray(data) || data.length === 0) {
+      return {
+        labels: [],
+        datasets: [
+          {
+            label: "No Data",
+            data: [],
+            backgroundColor: "rgba(59, 130, 246, 0.8)",
+            borderColor: "rgba(59, 130, 246, 1)",
+            borderWidth: 2,
+          },
+        ],
+      };
+    }
 
     const colors = [
       "rgba(59, 130, 246, 0.8)",
@@ -143,7 +156,7 @@ const ChartView: React.FC<ChartViewProps> = ({ dataset }) => {
     });
 
     return { labels, datasets };
-  }, [dataset.data, selectedChartType]);
+  }, [dataset?.data, selectedChartType]);
 
   const chartOptions = {
     responsive: true,
@@ -190,11 +203,26 @@ const ChartView: React.FC<ChartViewProps> = ({ dataset }) => {
   };
 
   const renderChart = () => {
-    if (!chartData) return null;
+    if (!dataset?.data || !Array.isArray(dataset.data) || dataset.data.length === 0) {
+      return (
+        <div className="flex items-center justify-center h-full">
+          <p className="text-gray-400">No data available to display</p>
+        </div>
+      );
+    }
 
     const commonProps = {
       data: chartData,
-      options: chartOptions,
+      options: {
+        ...chartOptions,
+        plugins: {
+          ...chartOptions.plugins,
+          legend: {
+            ...chartOptions.plugins.legend,
+            display: chartData?.datasets?.length > 0,
+          },
+        },
+      },
       className: "chart-container",
     };
 
@@ -212,6 +240,53 @@ const ChartView: React.FC<ChartViewProps> = ({ dataset }) => {
       default:
         return <Line {...commonProps} />;
     }
+  };
+
+  // Data preview section update
+  const renderDataPreview = () => {
+    if (!dataset?.data || !Array.isArray(dataset.data) || dataset.data.length === 0) {
+      return (
+        <div className="text-center py-4">
+          <p className="text-gray-400">No data available for preview</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead>
+            <tr className="border-b border-white/10">
+              {dataset.data?.[0] &&
+                Object.keys(dataset.data[0]).map((key) => (
+                  <th
+                    key={key}
+                    className="text-left py-2 px-4 text-gray-300 font-medium"
+                  >
+                    {key.charAt(0).toUpperCase() + key.slice(1)}
+                  </th>
+                ))}
+            </tr>
+          </thead>
+          <tbody>
+            {dataset.data?.slice(0, 5).map((row, index) => (
+              <tr
+                key={index}
+                className="border-b border-white/5 hover:bg-white/5"
+              >
+                {Object.values(row).map((value, cellIndex) => (
+                  <td key={cellIndex} className="py-2 px-4 text-gray-400">
+                    {typeof value === "number"
+                      ? value.toLocaleString()
+                      : String(value)}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    );
   };
 
   return (
@@ -257,45 +332,7 @@ const ChartView: React.FC<ChartViewProps> = ({ dataset }) => {
       {/* Data Preview */}
       <div className="glass-card p-6">
         <h3 className="text-lg font-semibold text-white mb-4">Data Preview</h3>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead>
-              <tr className="border-b border-white/10">
-                {dataset.data?.[0] &&
-                  Object.keys(dataset.data[0]).map((key) => (
-                    <th
-                      key={key}
-                      className="text-left py-2 px-4 text-gray-300 font-medium"
-                    >
-                      {key.charAt(0).toUpperCase() + key.slice(1)}
-                    </th>
-                  ))}
-              </tr>
-            </thead>
-            <tbody>
-              {dataset.data?.slice(0, 5).map((row, index) => (
-                <tr
-                  key={index}
-                  className="border-b border-white/5 hover:bg-white/5"
-                >
-                  {Object.values(row).map((value, cellIndex) => (
-                    <td key={cellIndex} className="py-2 px-4 text-gray-400">
-                      {typeof value === "number"
-                        ? value.toLocaleString()
-                        : String(value)}
-                    </td>
-                  ))}
-                </tr>
-              ))}
-            </tbody>
-          </table>
-
-          {dataset.data && dataset.data.length > 5 && (
-            <p className="text-center text-gray-500 mt-4">
-              Showing 5 of {dataset.data.length} rows
-            </p>
-          )}
-        </div>
+        {renderDataPreview()}
       </div>
     </div>
   );

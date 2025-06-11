@@ -1,9 +1,8 @@
 // Represents a dataset object with metadata and data array
 export interface Dataset {
-  // id: string;
-    id: number;
+  id: number;
   name: string;
-  data: any[];
+  data: any[] | null;
   type: 'time_series' | 'categorical' | 'distribution' | 'generic' | 'uploaded' | 'generated';
   createdAt: string;
   updatedAt?: string;

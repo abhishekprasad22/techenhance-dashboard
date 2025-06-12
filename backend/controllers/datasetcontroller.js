@@ -1,4 +1,5 @@
-const pool = require("../db");
+//const pool = require("../db");
+const supabase =require('../supabaseClient.ts');
 
 // let datasets = [
 //   {
@@ -55,21 +56,53 @@ const pool = require("../db");
 // };
 
 // Get all datasets with pg
+// const getDataSet = async (req, res) => {
+//   try {
+//     const result = await pool.query(`
+//       SELECT id, name, type, created_at as "createdAt",
+//              jsonb_array_length(data) as "dataPoints"
+//       FROM datasets
+//       ORDER BY created_at DESC
+//     `);
+//     res.json(result.rows);
+//   } catch (error) {
+//     console.error("Database error:", error);
+//     res.status(500).json({ error: "Failed to fetch datasets" });
+//   }
+// };
 const getDataSet = async (req, res) => {
   try {
-    const result = await pool.query(`
-      SELECT id, name, type, created_at as "createdAt",
-             jsonb_array_length(data) as "dataPoints"
-      FROM datasets
-      ORDER BY created_at DESC
-    `);
-    res.json(result.rows);
+    const { data, error } = await supabase
+      .from('datasets')
+      .select(`
+        id,
+        name,
+        type,
+        created_at,
+        data
+      `)
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      throw error;
+    }
+
+    // Map to include "dataPoints" count and rename fields
+    const formatted = data.map(dataset => ({
+      id: dataset.id,
+      name: dataset.name,
+      type: dataset.type,
+      createdAt: dataset.created_at,
+      dataPoints: Array.isArray(dataset.data) ? dataset.data.length : 0,
+    }));
+    console.log("Formatted datasets:", formatted);
+
+    res.json(formatted);
   } catch (error) {
-    console.error("Database error:", error);
+    console.error("Supabase query error:", error);
     res.status(500).json({ error: "Failed to fetch datasets" });
   }
 };
-
 // Returns the data set that is requested by the frontend with the help of id
 // const getDataSetById = async (req, res) => {
 //   const dataset = datasets.find((d) => d.id === req.params.id);
@@ -80,19 +113,41 @@ const getDataSet = async (req, res) => {
 // };
 
 // Get dataset by ID with pg
+// const getDataSetById = async (req, res) => {
+//   try {
+//     const result = await pool.query("SELECT * FROM datasets WHERE id = $1", [
+//       req.params.id,
+//     ]);
+
+//     if (result.rows.length === 0) {
+//       return res.status(404).json({ error: "Dataset not found" });
+//     }
+
+//     res.json(result.rows[0]);
+//   } catch (error) {
+//     console.error("Database error:", error);
+//     res.status(500).json({ error: "Failed to fetch dataset" });
+//   }
+// };
+
 const getDataSetById = async (req, res) => {
   try {
-    const result = await pool.query("SELECT * FROM datasets WHERE id = $1", [
-      req.params.id,
-    ]);
+    const { data, error } = await supabase
+      .from('datasets')
+      .select('*')
+      .eq('id', req.params.id)
+      .single(); // ensures one result
 
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Dataset not found" });
+    if (error) {
+      if (error.code === 'PGRST116') { // Not found
+        return res.status(404).json({ error: "Dataset not found" });
+      }
+      throw error;
     }
 
-    res.json(result.rows[0]);
+    res.json(data);
   } catch (error) {
-    console.error("Database error:", error);
+    console.error("Supabase error:", error);
     res.status(500).json({ error: "Failed to fetch dataset" });
   }
 };
@@ -117,69 +172,69 @@ const getDataSetById = async (req, res) => {
 // };
 
 // Create new dataset with pg
-const createDataSet = async (req, res) => {
-  const { name, data, type } = req.body;
+// const createDataSet = async (req, res) => {
+//   const { name, data, type } = req.body;
 
-  try {
-    const result = await pool.query(
-      `INSERT INTO datasets (name, data, type)
-       VALUES ($1, $2, $3)
-       RETURNING *`,
-      [name, JSON.stringify(data), type]
-    );
+//   try {
+//     const result = await pool.query(
+//       `INSERT INTO datasets (name, data, type)
+//        VALUES ($1, $2, $3)
+//        RETURNING *`,
+//       [name, JSON.stringify(data), type]
+//     );
 
-    res.status(201).json(result.rows[0]);
-  } catch (error) {
-    console.error("Database error:", error);
-    res.status(500).json({ error: "Failed to create dataset" });
-  }
-};
+//     res.status(201).json(result.rows[0]);
+//   } catch (error) {
+//     console.error("Database error:", error);
+//     res.status(500).json({ error: "Failed to create dataset" });
+//   }
+// };
 
-const generateDataSet = async (req, res) => {
-  const { type } = req.params;
-  const { count = 50, name = `Generated ${type} Data` } = req.body;
+// const generateDataSet = async (req, res) => {
+//   const { type } = req.params;
+//   const { count = 50, name = `Generated ${type} Data` } = req.body;
 
-  let data = [];
+//   let data = [];
 
-  switch (type) {
-    case "linear":
-      data = Array.from({ length: count }, (_, i) => ({
-        x: i,
-        y: i * 2 + Math.random() * 10 - 5,
-      }));
-      break;
+//   switch (type) {
+//     case "linear":
+//       data = Array.from({ length: count }, (_, i) => ({
+//         x: i,
+//         y: i * 2 + Math.random() * 10 - 5,
+//       }));
+//       break;
 
-    case "normal":
-      data = Array.from({ length: count }, () => {
-        const u1 = Math.random();
-        const u2 = Math.random();
-        const z0 = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
-        return { value: z0 * 10 + 50 };
-      });
-      break;
+//     case "normal":
+//       data = Array.from({ length: count }, () => {
+//         const u1 = Math.random();
+//         const u2 = Math.random();
+//         const z0 = Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+//         return { value: z0 * 10 + 50 };
+//       });
+//       break;
 
-    case "exponential":
-      data = Array.from({ length: count }, (_, i) => ({
-        x: i,
-        y: Math.exp(i * 0.1) + Math.random() * 5,
-      }));
-      break;
+//     case "exponential":
+//       data = Array.from({ length: count }, (_, i) => ({
+//         x: i,
+//         y: Math.exp(i * 0.1) + Math.random() * 5,
+//       }));
+//       break;
 
-    default:
-      return res.status(400).json({ error: "Invalid data type" });
-  }
+//     default:
+//       return res.status(400).json({ error: "Invalid data type" });
+//   }
 
-  const newDataset = {
-    id: Date.now().toString(),
-    name,
-    data,
-    type: "generated",
-    createdAt: new Date().toISOString(),
-  };
+//   const newDataset = {
+//     id: Date.now().toString(),
+//     name,
+//     data,
+//     type: "generated",
+//     createdAt: new Date().toISOString(),
+//   };
 
-  datasets.push(newDataset);
-  res.json(newDataset);
-};
+//   datasets.push(newDataset);
+//   res.json(newDataset);
+// };
 
 // const deleteDataSet = async (req, res) => {
 //   const datasetIndex = datasets.findIndex((d) => d.id === req.params.id);
@@ -192,20 +247,43 @@ const generateDataSet = async (req, res) => {
 // };
 
 // Delete dataset
+// const deleteDataSet = async (req, res) => {
+//   try {
+//     const result = await pool.query(
+//       "DELETE FROM datasets WHERE id = $1 RETURNING *",
+//       [req.params.id]
+//     );
+
+//     if (result.rows.length === 0) {
+//       return res.status(404).json({ error: "Dataset not found" });
+//     }
+
+//     res.status(204).send();
+//   } catch (error) {
+//     console.error("Database error:", error);
+//     res.status(500).json({ error: "Failed to delete dataset" });
+//   }
+// };
+
 const deleteDataSet = async (req, res) => {
   try {
-    const result = await pool.query(
-      "DELETE FROM datasets WHERE id = $1 RETURNING *",
-      [req.params.id]
-    );
+    const { data, error } = await supabase
+      .from('datasets')
+      .delete()
+      .eq('id', req.params.id)
+      .select()  // Needed to return the deleted row(s)
+      .single(); // Expecting only one
 
-    if (result.rows.length === 0) {
-      return res.status(404).json({ error: "Dataset not found" });
+    if (error) {
+      if (error.code === 'PGRST116') { // Not found
+        return res.status(404).json({ error: "Dataset not found" });
+      }
+      throw error;
     }
 
-    res.status(204).send();
+    res.status(204).send(); // Success, no content
   } catch (error) {
-    console.error("Database error:", error);
+    console.error("Supabase error:", error);
     res.status(500).json({ error: "Failed to delete dataset" });
   }
 };
@@ -213,7 +291,7 @@ const deleteDataSet = async (req, res) => {
 module.exports = {
   getDataSet,
   getDataSetById,
-  createDataSet,
-  generateDataSet,
+  //createDataSet,
+  //generateDataSet,
   deleteDataSet,
 };

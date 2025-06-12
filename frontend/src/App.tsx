@@ -8,8 +8,13 @@ import DataManager from "./components/DataManager";
 import Recommendations from "./components/Recommendations.tsx";
 import { Dataset } from "./types";
 import { dataService } from "./services/dataService";
+import { BrowserRouter, Route, Routes ,useNavigate} from "react-router-dom";
+import ProtectedRoute from "./components/ProtectedRoute.tsx";
+import Login from "./components/Login.tsx";
+import { supabase } from "./supabaseClient.ts";
 
 function App() {
+  //const navigate = useNavigate();
   // State for current view: dashboard, charts, or data manager
   const [currentView, setCurrentView] = useState<
     "dashboard" | "charts" | "data" | "recommendations"
@@ -20,11 +25,48 @@ function App() {
   const [selectedDataset, setSelectedDataset] = useState<Dataset | null>(null);
   // State for loading indicator
   const [loading, setLoading] = useState(true);
+//   useEffect(() => {
+//   const url = new URL(window.location.href);
+//   const code = url.searchParams.get("code");
+
+//   if (code) {
+//     supabase.auth.exchangeCodeForSession(code).then(({ data, error }) => {
+//       if (error) {
+//         console.error("Failed to exchange code:", error);
+//       } else {
+//         console.log("Exchanged session:", data.session);
+//         // ✅ Session will now be stored in localStorage
+//       }
+//     });
+//   }
+// }, []);
+
 
   // Load datasets on initial mount
   useEffect(() => {
     loadDatasets();
   }, []);
+
+//   useEffect(() => {
+//   supabase.auth.getSession().then(({ data: { session } }) => {
+//     if (session) {
+//       console.log("✅ Session restored after Google login", session);
+//       navigate("/"); // or wherever you want
+//     }
+//   });
+
+//   const {
+//     data: { subscription },
+//   } = supabase.auth.onAuthStateChange((_event, session) => {
+//     if (session) {
+//       console.log("🔄 Auth state changed:", session);
+//       navigate("/dashboard");
+//     }
+//   });
+
+//   return () => subscription.unsubscribe();
+// }, []);
+
 
   // Fetch all datasets from the data service
   const loadDatasets = async () => {
@@ -49,49 +91,34 @@ function App() {
       console.error("Failed to load dataset:", error);
     }
   };
+  // useEffect(()=>{
+  //   renderContent();
+  // },[currentView]);
 
-  // Render content based on the current view
-  const renderContent = () => {
-    switch (currentView) {
-      case "dashboard":
-        // Show dashboard with list of datasets
-        return (
-          <Dashboard
-            datasets={datasets}
-            onDatasetSelect={handleDatasetSelect}
-          />
-        );
-      case "charts":
-        // Show chart view if a dataset is selected, otherwise prompt user
-        return selectedDataset ? (
-          <ChartView dataset={selectedDataset} />
-        ) : (
-          <div className="flex items-center justify-center h-64">
-            <p className="text-gray-400">
-              Please select a dataset to visualize
-            </p>
-          </div>
-        );
-      case "data":
-        // Show data manager for managing datasets
-        return (
-          <DataManager datasets={datasets} onDatasetChange={loadDatasets} />
-        );
-      case "recommendations":
-        // Placeholder for recommendations view
-        return (
-          <Recommendations />
-        );
-      default:
-        // Fallback to dashboard
-        return (
-          <Dashboard
-            datasets={datasets}
-            onDatasetSelect={handleDatasetSelect}
-          />
-        );
-    }
-  };
+
+  // //Render content based on the current view
+  // const renderContent = () => {
+  //   switch (currentView) {
+  //     case "dashboard":
+  //       navigate("/");
+  //       break;
+  //     case "charts":
+  //       navigate("/charts");
+  //       break;
+  //     case "data":
+  //       // Show data manager for managing datasets
+  //       navigate("/data");
+  //       break;
+  //     case "recommendations":
+  //       // Placeholder for recommendations view
+  //       navigate("/recommendations");
+  //       break;
+  //     default:
+  //       // Fallback to dashboard
+  //       navigate("/");
+  //       break;
+  //   }
+  // };
 
   // Show loading spinner while fetching data
   if (loading) {
@@ -103,16 +130,61 @@ function App() {
   }
 
   // Main app layout with header, sidebar, main content, and toaster notifications
-  return (
-    <div className="min-h-screen flex flex-col">
-      <Header />
-      <div className="flex flex-1">
-        <Sidebar currentView={currentView} onViewChange={setCurrentView} />
-        <main className="flex-1 p-6 overflow-auto">
-          <div className="max-w-7xl mx-auto">{renderContent()}</div>
-        </main>
-      </div>
-      <Toaster
+   return (
+      <div className="min-h-screen flex flex-col">
+        <Header />
+        <div className="flex flex-1">
+          <Sidebar currentView={currentView} onViewChange={setCurrentView} />
+          <main className="flex-1 p-6 overflow-auto">
+            <Routes>
+              <Route path="/login" element={<Login />} />
+              <Route
+                path="/"
+                element={
+                  <ProtectedRoute>
+                    <Dashboard
+                      datasets={datasets}
+                      onDatasetSelect={handleDatasetSelect}
+                    />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/charts"
+                element={
+                  <ProtectedRoute>
+                    {selectedDataset ? (
+                      <ChartView dataset={selectedDataset} />
+                    ) : (
+                      <div className="flex items-center justify-center h-64">
+                        <p className="text-gray-400">
+                        Please select a dataset to visualize
+                        </p>
+                      </div>
+                    )}
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/data"
+                element={
+                  <ProtectedRoute>
+                    <DataManager datasets={datasets} onDatasetChange={loadDatasets} />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/recommendations"
+                element={
+                  <ProtectedRoute>
+                    <Recommendations />
+                  </ProtectedRoute>
+                }
+              />
+            </Routes>
+          </main>
+        </div>
+        <Toaster
         position="top-right"
         toastOptions={{
           style: {
@@ -123,7 +195,7 @@ function App() {
           },
         }}
       />
-    </div>
+      </div>
   );
 }
 

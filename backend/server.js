@@ -30,13 +30,13 @@ app.use("/api/datasets", datasetroute);
 app.use("/api/recommendations", require("./routes/recommendationroute"));
 
 // Test the connection
-pool.query("SELECT NOW()", (err, res) => {
-  if (err) {
-    console.error("PostgreSQL connection error:", err);
-  } else {
-    console.log("PostgreSQL connected at:", res.rows[0].now);
-  }
-});
+// pool.query("SELECT NOW()", (err, res) => {
+//   if (err) {
+//     console.error("PostgreSQL connection error:", err);
+//   } else {
+//     console.log("PostgreSQL connected at:", res.rows[0].now);
+//   }
+// });
 
 // Health check
 app.get("/api/health", (req, res) => {

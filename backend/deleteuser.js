@@ -20,4 +20,4 @@ async function deleteUser(userId) {
   console.log('✅ User deleted');
   return { success: true };
 }
-deleteUser('c7d298cc-8c29-4f57-af21-1ed6b30d55d3');
+deleteUser('d5f52eef-9865-4713-a1ca-564bcf62e706');

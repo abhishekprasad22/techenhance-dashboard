@@ -70,6 +70,39 @@ const supabase =require('../supabaseClient.ts');
 //     res.status(500).json({ error: "Failed to fetch datasets" });
 //   }
 // };
+// const getDataSet = async (req, res) => {
+//   try {
+//     const { data, error } = await supabase
+//       .from('datasets')
+//       .select(`
+//         id,
+//         name,
+//         type,
+//         created_at,
+//         data
+//       `)
+//       .order('created_at', { ascending: false });
+
+//     if (error) {
+//       throw error;
+//     }
+
+//     // Map to include "dataPoints" count and rename fields
+//     const formatted = data.map(dataset => ({
+//       id: dataset.id,
+//       name: dataset.name,
+//       type: dataset.type,
+//       createdAt: dataset.created_at,
+//       dataPoints: Array.isArray(dataset.data) ? dataset.data.length : 0,
+//     }));
+//     console.log("Formatted datasets:", formatted);
+
+//     res.json(formatted);
+//   } catch (error) {
+//     console.error("Supabase query error:", error);
+//     res.status(500).json({ error: "Failed to fetch datasets" });
+//   }
+// };
 const getDataSet = async (req, res) => {
   try {
     const { data, error } = await supabase
@@ -87,14 +120,16 @@ const getDataSet = async (req, res) => {
       throw error;
     }
 
-    // Map to include "dataPoints" count and rename fields
+    // Include full data content
     const formatted = data.map(dataset => ({
       id: dataset.id,
       name: dataset.name,
       type: dataset.type,
       createdAt: dataset.created_at,
       dataPoints: Array.isArray(dataset.data) ? dataset.data.length : 0,
+      data: dataset.data, // include full JSON array
     }));
+
     console.log("Formatted datasets:", formatted);
 
     res.json(formatted);
@@ -103,6 +138,7 @@ const getDataSet = async (req, res) => {
     res.status(500).json({ error: "Failed to fetch datasets" });
   }
 };
+
 // Returns the data set that is requested by the frontend with the help of id
 // const getDataSetById = async (req, res) => {
 //   const dataset = datasets.find((d) => d.id === req.params.id);

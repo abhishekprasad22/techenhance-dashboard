@@ -23,7 +23,7 @@ const ProtectedRoute = ({ children }: { children: JSX.Element }) => {
   console.log("Session:", session);
 
   if (isLoading) return <div>Loading...</div>;
-  if (!session) return <Navigate to="/login" />;
+  if (!session) return <Navigate to="/Login" />;
 
   return children;
 };

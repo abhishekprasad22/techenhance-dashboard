@@ -1,6 +1,7 @@
 import React from 'react';
 import { BarChart3, PieChart, TrendingUp, Activity, Database, Users } from 'lucide-react';
 import { Dataset } from '../types';
+import Header from './Header';
 
 interface DashboardProps {
   datasets: Dataset[];
